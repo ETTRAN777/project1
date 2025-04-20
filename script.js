@@ -3,6 +3,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const accountIcon = document.querySelector('.account');
   const dropdown = document.querySelector('.dropdown');
   const bigView = document.querySelector('.bigView');
+  updateBigView("sigma","sigma","sigma","sigma","https://www.google.com")
 
   cards.forEach(card => {
     if (card.classList.contains('cardSelected')) {
@@ -119,7 +120,11 @@ document.addEventListener("DOMContentLoaded", () => {
         })
         .then(data => {
           if (data && data.results) {
-            return data.results.map(job => [job.id, job.title]);
+            return data.results.map(job => ({
+              id: job.id,
+              title: job.title,
+              city: job.location?.area?.[1] || null // grabs "London" from ["UK", "London", ...]
+            }));
           } else {
             console.error('Unexpected API response structure:', data);
             return [];
@@ -132,9 +137,24 @@ document.addEventListener("DOMContentLoaded", () => {
     )
   ).then(results => {
     const allJobs = results.flat();
-    const uniqueJobs = Array.from(new Map(allJobs.map(([id, title]) => [title.toLowerCase(), [id, title]])).values());
+  
+    // Get unique job titles
+    const uniqueJobs = Array.from(
+      new Map(allJobs.map(({ id, title }) => [title.toLowerCase(), [id, title]])).values()
+    );
+  
+    // Get unique cities (skip nulls)
+    const citiesSet = new Set(
+      allJobs
+        .map(({ city }) => city)
+        .filter(city => city) // remove null or undefined
+    );
+    const uniqueCities = Array.from(citiesSet).map(city => [city, city]);
+  
+    // Populate dropdowns
     populateDropdown(positionDropdown, uniqueJobs, "Position:");
-  });
+    populateDropdown(locationDropdown, uniqueCities, "Location:");
+  });  
 });
 
 function populateDropdown(dropdown, items, defaultText) {
@@ -154,4 +174,20 @@ function populateDropdown(dropdown, items, defaultText) {
     option.textContent = label;
     dropdown.appendChild(option);
   });
+}
+//Test
+
+// Function to update the big view with job details
+function updateBigView(aboutValue, descriptionValue,salaryValue,datePostedValue,applyButtonValue){
+  const about = document.getElementById("aboutValue");
+  const description = document.getElementById("descriptionValue");
+  const salary = document.getElementById("salaryValue");
+  const datePosted = document.getElementById("datePostedValue");
+  const applyButton = document.getElementById("applyButtonValue");
+
+  about.innerText = aboutValue;
+  description.innerText = descriptionValue;
+  salary.innerText = salaryValue;
+  datePosted.innerText = datePostedValue;
+  applyButton.action = applyButtonValue;
 }
