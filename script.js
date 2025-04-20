@@ -191,3 +191,51 @@ function updateBigView(aboutValue, descriptionValue,salaryValue,datePostedValue,
   datePosted.innerText = datePostedValue;
   applyButton.action = applyButtonValue;
 }
+
+function fetchFilteredJobs() {
+  const position = document.getElementById("position").value;
+  const location = document.getElementById("location").value;
+  const date = document.getElementById("date")?.value;
+  const salary = document.getElementById("salary")?.value;
+
+  const baseUrl = 'https://api.adzuna.com/v1/api/jobs/us/search/1';
+  const appId = '08a72ab0';
+  const appKey = '874d4ac078fb3738a509c0b786266e21';
+  const category = 'it-jobs';
+
+  let url = `${baseUrl}?app_id=${appId}&app_key=${appKey}&category=${category}`;
+
+  if (position) url += `&what=${encodeURIComponent(position)}`;
+  if (location) url += `&where=${encodeURIComponent(location)}`;
+  if (salary) url += `&salary_min=${encodeURIComponent(salary)}`;
+  if (date) url += `&sort_by=date&max_days_old=${encodeURIComponent(date)}`;
+
+  fetch(url)
+    .then(res => {
+      if (!res.ok) throw new Error(`Error: ${res.status}`);
+      return res.json();
+    })
+    .then(data => {
+      const job = data.results?.[0];
+      if (job) {
+        updateBigView(
+          job.company.display_name || 'N/A',
+          job.description || 'No description provided.',
+          `$${job.salary_min || 'N/A'} - $${job.salary_max || 'N/A'}`,
+          job.created || 'N/A',
+          job.redirect_url || '#'
+        );
+      } else {
+        updateBigView('No Results', '', '', '', '#');
+      }
+    })
+    .catch(err => console.error("Failed to fetch jobs:", err));
+}
+document.getElementById("position").addEventListener("change", fetchFilteredJobs);
+document.getElementById("location").addEventListener("change", fetchFilteredJobs);
+if (document.getElementById("date")) {
+  document.getElementById("date").addEventListener("change", fetchFilteredJobs);
+}
+if (document.getElementById("salary")) {
+  document.getElementById("salary").addEventListener("change", fetchFilteredJobs);
+}
