@@ -4,7 +4,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const dropdown = document.querySelector('.dropdown');
   const bigView = document.querySelector('.bigView');
   updateBigView("sigma","sigma","sigma","sigma","https://www.google.com")
-
+  
   cards.forEach(card => {
     if (card.classList.contains('cardSelected')) {
       return;
@@ -108,10 +108,11 @@ document.addEventListener("DOMContentLoaded", () => {
     "monitoring", "logging", "metrics", "observability", "incident response"
   ];
   const specificCategory = "it-jobs";
-
+  const appId = '583d7467';
+  const appKey = 'a3731e89eb3d38f871e53fbe22a4d724';
   Promise.all(
     searchKeywords.map(keyword =>
-      fetch(`https://api.adzuna.com/v1/api/jobs/us/search/1?app_id=08a72ab0&app_key=874d4ac078fb3738a509c0b786266e21&category=${specificCategory}&what=${keyword}`)
+      fetch(`https://api.adzuna.com/v1/api/jobs/us/search/1?app_id=${appId}&app_key=${appKey}&category=${specificCategory}&what=${keyword}`)
         .then(response => {
           if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
@@ -154,6 +155,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // Populate dropdowns
     populateDropdown(positionDropdown, uniqueJobs, "Position:");
     populateDropdown(locationDropdown, uniqueCities, "Location:");
+    fetchFilteredJobs();
   });  
 });
 
@@ -170,8 +172,11 @@ function populateDropdown(dropdown, items, defaultText) {
 
   items.forEach(([value, label]) => {
     const option = document.createElement("option");
-    option.value = value;
     option.textContent = label;
+    label = label.toLowerCase();
+    label=encodeURIComponent(label)
+    option.value = label;
+    console.log("THIS IS VALUE: "+label)
     dropdown.appendChild(option);
   });
 }
@@ -193,22 +198,28 @@ function updateBigView(aboutValue, descriptionValue,salaryValue,datePostedValue,
 }
 
 function fetchFilteredJobs() {
+  const appId = '583d7467';
+  const appKey = 'a3731e89eb3d38f871e53fbe22a4d724';
   const position = document.getElementById("position").value;
+  console.log("THIS IS POS VALUE: "+position)
   const location = document.getElementById("location").value;
   const date = document.getElementById("date")?.value;
   const salary = document.getElementById("salary")?.value;
 
   const baseUrl = 'https://api.adzuna.com/v1/api/jobs/us/search/1';
-  const appId = '08a72ab0';
-  const appKey = '874d4ac078fb3738a509c0b786266e21';
   const category = 'it-jobs';
 
   let url = `${baseUrl}?app_id=${appId}&app_key=${appKey}&category=${category}`;
 
-  if (position) url += `&what=${encodeURIComponent(position)}`;
-  if (location) url += `&where=${encodeURIComponent(location)}`;
-  if (salary) url += `&salary_min=${encodeURIComponent(salary)}`;
-  if (date) url += `&sort_by=date&max_days_old=${encodeURIComponent(date)}`;
+  if(!position == null){
+    url += `&what=${position}`;
+  }
+  if(!location == null){
+    url += `&where=${location}`;
+  }
+  if(!salary == null){
+    url += `&salary_min=${salary}`;
+  }
 
   fetch(url)
     .then(res => {
